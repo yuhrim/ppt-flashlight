@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.pptflashlight'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.pptflashlight"
+        minSdk 23                 // target device runs Android 7.1.2 / API 25
+        targetSdk 25
+        versionCode 2
+        versionName "1.1"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // The signing key and its password are not part of the repository (keystore/ is gitignored).
+    // Provide them locally: keystore/ppt-flashlight.jks plus -PPPT_KEYSTORE_PASSWORD=... (or the
+    // environment variables below). Without them the release APK is simply left unsigned.
+    def keystoreFile = rootProject.file('keystore/ppt-flashlight.jks')
+    def keystorePassword = project.findProperty('PPT_KEYSTORE_PASSWORD')
+            ?: System.getenv('PPT_KEYSTORE_PASSWORD')
+    def keyAliasName = project.findProperty('PPT_KEY_ALIAS') ?: 'pptflashlight'
+    def keyPasswordValue = project.findProperty('PPT_KEY_PASSWORD') ?: keystorePassword
+    def canSign = keystoreFile.exists() && keystorePassword
+
+    signingConfigs {
+        release {
+            if (canSign) {
+                storeFile keystoreFile
+                storePassword keystorePassword
+                keyAlias keyAliasName
+                keyPassword keyPasswordValue
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Xposed looks our classes up by name: keep shrinking and obfuscation off.
+            minifyEnabled false
+            shrinkResources false
+            if (canSign) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    // Classic Xposed API for SDK 25: compile only, the framework provides it at runtime.
+    compileOnly files('libs/xposed-api-82.jar')
+    testImplementation 'junit:junit:4.13.2'
+}

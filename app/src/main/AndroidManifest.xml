@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- setTorchMode is gated on android.permission.CAMERA by CameraService. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.flash"
+        android:required="false" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="PPT Flashlight">
+
+        <!-- Classic Xposed module markers, read by Xposed Installer / the framework. -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Hold the PPT button (KEY_SEND) for 500 ms to toggle the flashlight." />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="82" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="PPT Flashlight"
+            android:theme="@android:style/Theme.Material.Light.DarkActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Toggle requests arrive here from system_server, addressed explicitly by component. -->
+        <receiver
+            android:name=".TorchReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.pptflashlight.action.TOGGLE_TORCH" />
+                <action android:name="com.pptflashlight.action.TORCH_OFF" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".TorchService"
+            android:exported="false" />
+
+    </application>
+
+</manifest>
